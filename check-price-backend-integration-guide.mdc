@@ -1,0 +1,324 @@
+---
+description: Backend integration guide for the Check Price Platform — covers the Express.js/Sequelize API architecture, auth flow (JWT/Passport), available endpoints, response formats, validation rules, environment setup, and Swagger docs. Apply when working on backend routes/controllers, auth logic, API responses, or when integrating the frontend with this API.
+globs: ["src/**/*.js", "src/**/*.ts", "**/routes/**/*", "**/controllers/**/*", "**/models/**/*", "**/middleware/**/*", "**/config/**/*", "**/*.env*"]
+alwaysApply: false
+---
+
+# Check Price Platform – Backend Integration Guide
+
+**Version:** 1.0
+**Date:** 2026-07-14
+**Author:** *[Your Name]*
+
+## Executive Summary
+
+This document provides a comprehensive guide for integrating the backend of the Check Price Platform with the frontend. It covers the system overview, technology stack, API endpoints, authentication flow, deployment options, local setup, configuration, and coding standards. By following these guidelines, the frontend team can begin development in parallel with the backend, testing endpoints via Swagger and secure tunnels. The document includes sample requests, example responses, diagrams (Mermaid), and references to official documentation for best practices.
+
+## Project Description & Objectives
+
+Check Price is a location-based price comparison platform. It allows users to search and compare product prices across participating stores before visiting a store. Key features include:
+
+- **User Roles:** Customers, Store Agents, Store Administrators, Platform Administrators.
+- **Core Functionality:** Secure user authentication, product and store management, price submission, product search, and price comparison.
+- **Scope:** Provide RESTful APIs for mobile and web apps to interact with the system, ensuring consistency and security.
+
+**Objectives:**
+- Deliver secure, well-documented APIs for all planned features.
+- Enable frontend integration in stages, starting with authentication.
+- Follow industry best practices (e.g., JWT auth, consistent API responses, proper validation).
+
+## Technology Stack
+
+| Technology       | Purpose                                                |
+|------------------|--------------------------------------------------------|
+| **Express.js**   | Backend framework (Node.js)                            |
+| **PostgreSQL**   | Relational database for persistent data storage        |
+| **Sequelize ORM**| Database ORM/abstraction (model-based queries)         |
+| **JSON Web Token (JWT)** | Authentication tokens                          |
+| **Passport.js**  | Authentication strategy (Passport-JWT)                 |
+| **Bcrypt**       | Password hashing                                       |
+| **Swagger**      | API documentation (`swagger-jsdoc` + `swagger-ui-express`) |
+| **express-validator / Joi** | Request body/schema validation              |
+| **Ngrok / Cloudflare Tunnel** | Development-time tunneling for remote testing |
+
+## System Architecture
+
+```mermaid
+flowchart LR
+    User[(User)] -->|Uses| Frontend[Frontend (Web/Mobile)]
+    Frontend -->|HTTP requests| API[Express.js Backend API]
+    API -->|JWT/Auth| Auth[Auth Module (Passport, JWT)]
+    API -->|Queries| Database[(PostgreSQL via Sequelize)]
+    API -->|Validates & Logs| Middleware[Express Middleware & Error Handlers]
+```
+
+- **Frontend:** Mobile/web client applications consuming the REST API.
+- **Backend (Express.js):** Handles routes, controllers, and security. Uses **Passport** for JWT-based auth.
+- **Database:** PostgreSQL via Sequelize ORM for data persistence.
+- **Authentication:** Requests requiring auth use HTTP header `Authorization: Bearer <token>`. The backend validates JWTs (signed with `JWT_SECRET`).
+- **Middleware:** Custom middleware functions and error handlers enforce validation and consistent response formatting across endpoints.
+
+## Development Roadmap (Phased Delivery)
+
+1. **Phase 1 – Authentication & User Management:**
+   - **Deliverables:** User registration, login, JWT issuance, profile endpoint, validation, Swagger docs.
+2. **Phase 2 – Store Management:**
+   - **Deliverables:** CRUD for stores, store agents assignment, store verification.
+3. **Phase 3 – Product Management:**
+   - **Deliverables:** Product categories, product CRUD, product images, availability.
+4. **Phase 4 – Price Management:**
+   - **Deliverables:** Submit/update product prices, track price history.
+5. **Phase 5 – Search & Comparison:**
+   - **Deliverables:** Product and store search, price comparison, lowest price identification.
+6. **Phase 6 – Administration & Reporting:**
+   - **Deliverables:** Admin dashboards, user/store management, analytics, and audit logging.
+
+Each phase will be delivered with complete API documentation and is ready for frontend integration upon completion.
+
+## Available API Endpoints (v1.0)
+
+**Base URL:**
+- Development: `http://localhost:3000` (or use your tunnel URL)
+- Replace `<API_BASE>` with the actual host (e.g., ngrok/Cloudflare domain) in the examples below.
+
+### `POST /auth/register` – User Registration (no auth)
+
+- **Request (JSON):**
+
+  ```bash
+  curl -X POST <API_BASE>/auth/register \
+       -H "Content-Type: application/json" \
+       -d '{"fullName": "Alice Smith", "email": "alice@example.com", "password": "SecureP@ssw0rd"}'
+  ```
+
+- **Response (201 Created, JSON):**
+
+  ```json
+  {
+    "success": true,
+    "message": "Registration successful",
+    "data": {
+      "accessToken": "<JWT_TOKEN>",
+      "user": {
+        "id": "uuid-1234",
+        "fullName": "Alice Smith",
+        "email": "alice@example.com",
+        "role": "USER",
+        "provider": "local",
+        "isVerified": false,
+        "createdAt": "2026-07-14T12:00:00Z",
+        "updatedAt": "2026-07-14T12:00:00Z"
+      }
+    }
+  }
+  ```
+
+### `POST /auth/login` – User Login (no auth)
+
+- **Request (JSON):**
+
+  ```bash
+  curl -X POST <API_BASE>/auth/login \
+       -H "Content-Type: application/json" \
+       -d '{"email": "alice@example.com", "password": "SecureP@ssw0rd"}'
+  ```
+
+- **Response (200 OK, JSON):**
+
+  ```json
+  {
+    "success": true,
+    "message": "Login successful",
+    "data": {
+      "accessToken": "<JWT_TOKEN>",
+      "user": {
+        "id": "uuid-1234",
+        "fullName": "Alice Smith",
+        "email": "alice@example.com",
+        "role": "USER"
+      }
+    }
+  }
+  ```
+
+### `GET /auth/profile` – Current User Profile (auth required)
+
+- **Headers:**
+
+  ```
+  Authorization: Bearer <JWT_TOKEN>
+  ```
+
+- **Request:**
+
+  ```bash
+  curl -X GET <API_BASE>/auth/profile \
+       -H "Authorization: Bearer <JWT_TOKEN>"
+  ```
+
+- **Response (200 OK, JSON):**
+
+  ```json
+  {
+    "success": true,
+    "message": "Request successful",
+    "data": {
+      "id": "uuid-1234",
+      "email": "alice@example.com",
+      "role": "USER"
+    }
+  }
+  ```
+
+_Currently, these are the only endpoints available. Future phases will introduce `/stores`, `/products`, `/prices`, etc., following the same request/response patterns._
+
+## Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant Database
+
+    User->>Frontend: Enter registration or login info
+    Frontend->>Backend: POST /auth/login or /auth/register
+    Backend->>Database: (Find user by email)
+    Database-->>Backend: User record (email, hashed password, etc.)
+    Backend-->>Frontend: 200 { success:true, accessToken, user }
+    Frontend->>Backend: GET /auth/profile (with `Authorization: Bearer <token>`)
+    Backend->>Backend: Passport JWT Guard/Middleware validates token
+    Backend->>Database: (Optionally fetch user data)
+    Database-->>Backend: User profile data
+    Backend-->>Frontend: 200 { success:true, user profile }
+```
+
+1. **Register/Login:** User sends credentials. Backend creates/verifies user and returns a JWT (`accessToken`).
+2. **Token Storage:** Frontend should securely store the JWT (e.g. in memory or secure storage).
+3. **Authenticated Requests:** Include header `Authorization: Bearer <token>` for protected routes.
+4. **Token Validation:** Backend checks the JWT on each protected request (Passport-JWT strategy, applied as Express middleware).
+
+## Deployment & Remote Access
+
+- **Production Deployment (Recommended):** Deploy the API to a cloud service (e.g., Render, Railway, AWS). Use a fixed domain (e.g., `https://api.check-price.com`). Ensure HTTPS.
+- **Development Tunneling:** While developing locally, use a tunnel to expose your local server:
+
+  - **Ngrok:** Install ngrok (https://ngrok.com). Run, for example:
+    ```bash
+    ngrok http 3000
+    ```
+    This gives you a public URL (e.g., `https://abcd-1234.ngrok.io`) pointing to your local port 3000. You can also specify a custom domain with `--url` if you have DNS configured.
+
+  - **Cloudflare Tunnel (cloudflared):** Install `cloudflared`. Then run:
+    ```bash
+    cloudflared tunnel --url http://localhost:3000
+    ```
+    Cloudflare will output a public URL (similar to ngrok). Cloudflare Tunnel is a free, long-running alternative to ngrok. For example usage see the Cloudflare docs.
+
+  - **Docker + CI/CD:** Optionally containerize the app with Docker and set up a CI pipeline (GitHub Actions, GitLab CI) to deploy to a dev/staging server on each commit. The frontend can then use the dev server URL.
+
+The frontend team should use the provided public URL (via deployment or tunnel) as the API base. Swagger will be available under `/<host>/api-docs` (see below).
+
+## Running Locally
+
+To run the backend on your machine:
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+2. **Set up the database:**
+   Ensure `DATABASE_URL` is set in `.env` (see next section).
+   Initialize Sequelize and run migrations:
+   ```bash
+   npx sequelize-cli db:migrate
+   ```
+   (This creates the tables in PostgreSQL based on your migration files.)
+3. **Start the server (development mode):**
+   ```bash
+   npm run start:dev
+   ```
+   The server listens on `http://localhost:3000` by default. Swagger UI will be available at `http://localhost:3000/api-docs`.
+
+## Environment Variables (`.env`)
+
+Create a `.env` file in the project root with these variables (example values):
+
+| Variable      | Description                         | Example                                                       |
+|---------------|-------------------------------------|-----------------------------------------------------------------|
+| `DATABASE_URL`| PostgreSQL connection string        | `postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public` |
+| `JWT_SECRET`  | Secret key for signing JWT tokens   | `superSecretKey123`                                           |
+| `JWT_EXPIRES_IN` | Token expiration (e.g., 1d, 12h) | `1d`                                                          |
+| `PORT`        | (Optional) Server port              | `3000`                                                        |
+
+*Note:* In Express.js, use the `dotenv` package (loaded at the top of your entry file, e.g. `require('dotenv').config()`) to load variables from `.env`, and configure Sequelize's connection using `DATABASE_URL`.
+
+## API Standards
+
+- **Base URL:** All endpoints are under `<BASE_URL>/*`.
+- **Content-Type:** JSON for request and response.
+- **Success Response:** Every successful response follows:
+  ```json
+  {
+    "success": true,
+    "message": "Descriptive message",
+    "data": { ... }
+  }
+  ```
+- **Error Response:** All errors (validation, auth, etc.) return:
+  ```json
+  {
+    "success": false,
+    "statusCode": 400,
+    "message": "Error details",
+    "path": "/endpoint/path",
+    "timestamp": "2026-07-14T12:34:56.789Z"
+  }
+  ```
+- **HTTP Status Codes:** Use standard codes (200 OK, 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 500 Internal Server Error).
+
+These formats ensure frontend code can handle responses uniformly.
+
+## Validation Rules (Auth Endpoints)
+
+Requests to `/auth/register` and `/auth/login` are validated (via `express-validator` or a Joi schema):
+
+- **Register (`POST /auth/register`):**
+  - `fullName`: required (non-empty string).
+  - `email`: required, must be a valid email format.
+  - `password`: required, minimum 6 characters.
+- **Login (`POST /auth/login`):**
+  - `email`: required, valid email.
+  - `password`: required.
+
+Validation errors will return status `400` with details in the `message` field.
+
+## Swagger Documentation
+
+Interactive API docs (Swagger UI) are generated via `swagger-jsdoc` and served with `swagger-ui-express`. While the server is running, visit:
+
+- **UI:** `http://<host>/api-docs` (e.g., `http://localhost:3000/api-docs`).
+- **JSON Spec:** `http://<host>/api-docs.json` (e.g., `http://localhost:3000/api-docs.json`).
+
+The Swagger UI allows exploring endpoints, viewing request/response schemas, and trying calls directly in the browser. It supports entering a Bearer token via the "Authorize" button for testing protected endpoints.
+
+## Changelog
+
+- **v1.0 (2026-07-14):** Initial backend endpoints delivered. Includes authentication module with `/auth/register`, `/auth/login`, `/auth/profile`, JWT setup, and Swagger documentation.
+
+## Frontend Integration Checklist
+
+- [ ] Use the **Base URL** provided (deployed or tunnel URL) for API calls.
+- [ ] Test endpoints via **Swagger UI** (see Swagger Documentation above).
+- [ ] Implement storing the returned `accessToken` from login/register.
+- [ ] For protected calls (like `/auth/profile`), include header:
+  ```
+  Authorization: Bearer <ACCESS_TOKEN>
+  ```
+- [ ] Parse responses according to the `{ success, message, data }` format.
+- [ ] Handle error responses (`success: false`) uniformly (display `message`).
+- [ ] Validate that responses match the examples. Report any mismatches.
+
+Please reach out to the backend team if you encounter any issues or have questions about the API behavior or data formats.
+
+**Sources:** Official Express.js and Sequelize documentation (for Swagger setup and environment configuration), Ngrok and Cloudflare documentation for tunneling.
