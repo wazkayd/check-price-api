@@ -2,8 +2,7 @@ const { DataTypes } = require('sequelize');
 const bcrypt = require('bcrypt');
 const sequelize = require('../config/database');
 
-// Maps to the existing Prisma "User" table in check_price_db.
-// Do not run the Sequelize users migration against this database.
+// Maps to the "User" table (Prisma-compatible schema).
 const User = sequelize.define(
   'User',
   {

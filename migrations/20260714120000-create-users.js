@@ -2,57 +2,40 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('users', {
-      id: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
-        primaryKey: true,
-        allowNull: false,
-      },
-      full_name: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      email: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      password: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      role: {
-        type: Sequelize.ENUM('USER', 'STORE_AGENT', 'STORE_ADMIN', 'PLATFORM_ADMIN'),
-        allowNull: false,
-        defaultValue: 'USER',
-      },
-      provider: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        defaultValue: 'local',
-      },
-      is_verified: {
-        type: Sequelize.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-      },
-      created_at: {
-        type: Sequelize.DATE,
-        allowNull: false,
-      },
-      updated_at: {
-        type: Sequelize.DATE,
-        allowNull: false,
-      },
-    });
+  async up(queryInterface) {
+    await queryInterface.sequelize.query(`
+      DO $$ BEGIN
+        CREATE TYPE "UserRole" AS ENUM ('USER', 'STORE_AGENT', 'ADMIN');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+    `);
 
-    await queryInterface.addIndex('users', ['email'], { unique: true });
+    await queryInterface.sequelize.query(`
+      CREATE TABLE IF NOT EXISTS "User" (
+        "id" TEXT NOT NULL,
+        "fullName" TEXT NOT NULL,
+        "email" TEXT NOT NULL,
+        "password" TEXT,
+        "provider" TEXT NOT NULL DEFAULT 'local',
+        "providerId" TEXT,
+        "role" "UserRole" NOT NULL DEFAULT 'USER',
+        "isVerified" BOOLEAN NOT NULL DEFAULT false,
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        "avatar" TEXT,
+        "phoneNumber" TEXT,
+        CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+      );
+    `);
+
+    await queryInterface.sequelize.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
+    `);
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable('users');
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_users_role";');
+    await queryInterface.sequelize.query('DROP TABLE IF EXISTS "User";');
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "UserRole";');
   },
 };

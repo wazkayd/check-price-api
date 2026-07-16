@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: check-price-api
+    runtime: node
+    plan: free
+    repo: https://github.com/wazkayd/check-price-api
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_EXPIRES_IN
+        value: 1d
+      - key: DATABASE_SSL
+        value: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: check-price-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+
+databases:
+  - name: check-price-db
+    plan: free
+    databaseName: check_price
+    user: check_price_user

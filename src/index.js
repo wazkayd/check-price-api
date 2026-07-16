@@ -16,9 +16,10 @@ async function startServer() {
 
     const app = createApp();
 
-    const server = app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-      console.log(`Swagger UI available at http://localhost:${PORT}/api-docs`);
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+      console.log(`Server running on ${baseUrl}`);
+      console.log(`Swagger UI available at ${baseUrl}/api-docs`);
     });
 
     server.on('error', (error) => {
