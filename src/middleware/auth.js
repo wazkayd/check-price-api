@@ -46,7 +46,18 @@ function authenticateJwt(req, res, next) {
   })(req, res, next);
 }
 
+function optionalAuthenticateJwt(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+
+  return authenticateJwt(req, res, next);
+}
+
 module.exports = {
   configurePassport,
   authenticateJwt,
+  optionalAuthenticateJwt,
 };

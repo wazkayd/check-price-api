@@ -170,7 +170,102 @@ Each phase will be delivered with complete API documentation and is ready for fr
   }
   ```
 
-_Currently, these are the only endpoints available. Future phases will introduce `/stores`, `/products`, `/prices`, etc., following the same request/response patterns._
+_Currently, Phase 1 (auth) and Phase 2 (stores) endpoints are available. Future phases will introduce `/products`, `/prices`, etc., following the same request/response patterns._
+
+### Store Endpoints (Phase 2)
+
+| Method | Endpoint | Auth | Role | Description |
+|--------|----------|------|------|-------------|
+| `GET` | `/stores` | Optional | Public / Admin | List verified stores. Admins may pass `?all=true` to include unverified stores. |
+| `GET` | `/stores/:id` | Optional | Public / Admin / Agent | Get store details |
+| `POST` | `/stores` | Required | `ADMIN` | Create a new store |
+| `PUT` | `/stores/:id` | Required | `ADMIN`, assigned `STORE_AGENT` | Update store details |
+| `DELETE` | `/stores/:id` | Required | `ADMIN` | Delete a store |
+| `PATCH` | `/stores/:id/verify` | Required | `ADMIN` | Verify a store |
+| `PATCH` | `/stores/:id/reject` | Required | `ADMIN` | Reject a store |
+| `GET` | `/stores/:id/agents` | Required | `ADMIN`, assigned `STORE_AGENT` | List agents for a store |
+| `POST` | `/stores/:id/agents` | Required | `ADMIN` | Assign a user as store agent |
+| `DELETE` | `/stores/:id/agents/:userId` | Required | `ADMIN` | Remove store agent assignment |
+
+#### `POST /stores` – Create Store (ADMIN)
+
+```bash
+curl -X POST <API_BASE>/stores \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <ADMIN_TOKEN>" \
+     -d '{
+       "name": "Fresh Mart",
+       "address": "12 Market Street",
+       "city": "Lagos",
+       "latitude": 6.5244,
+       "longitude": 3.3792
+     }'
+```
+
+**Response (201 Created):**
+
+```json
+{
+  "success": true,
+  "message": "Store created successfully",
+  "data": {
+    "id": "uuid-5678",
+    "name": "Fresh Mart",
+    "address": "12 Market Street",
+    "city": "Lagos",
+    "status": "PENDING",
+    "isVerified": false,
+    "createdAt": "2026-07-16T12:00:00.000Z",
+    "updatedAt": "2026-07-16T12:00:00.000Z"
+  }
+}
+```
+
+#### `GET /stores` – List Stores (public)
+
+```bash
+curl -X GET "<API_BASE>/stores?city=Lagos"
+```
+
+Returns verified stores only for public callers. Admins can use `?all=true`.
+
+#### `PATCH /stores/:id/verify` – Verify Store (ADMIN)
+
+```bash
+curl -X PATCH <API_BASE>/stores/uuid-5678/verify \
+     -H "Authorization: Bearer <ADMIN_TOKEN>"
+```
+
+#### `POST /stores/:id/agents` – Assign Store Agent (ADMIN)
+
+```bash
+curl -X POST <API_BASE>/stores/uuid-5678/agents \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <ADMIN_TOKEN>" \
+     -d '{ "userId": "uuid-1234" }'
+```
+
+Assigning a user promotes them to `STORE_AGENT` if their current role is `USER`.
+
+## Validation Rules (Store Endpoints)
+
+- **Create / Update:**
+  - `name`: required on create (non-empty string).
+  - `address`: required on create (non-empty string).
+  - `email`: optional, must be valid if provided.
+  - `latitude`: optional, between -90 and 90.
+  - `longitude`: optional, between -180 and 180.
+  - `status`: optional on update (`PENDING`, `VERIFIED`, `REJECTED`, `INACTIVE`) — ADMIN only.
+- **Assign agent:**
+  - `userId`: required, valid UUID of an existing user.
+
+## Role Access Summary (Phase 2)
+
+| Role | Permissions |
+|------|-------------|
+| `USER` | List/view verified stores |
+| `STORE_AGENT` | Update assigned stores, list agents on assigned stores |
+| `ADMIN` | Full store CRUD, verify/reject stores, assign/remove agents |
 
 ## Authentication Flow
 
@@ -304,6 +399,7 @@ The Swagger UI allows exploring endpoints, viewing request/response schemas, and
 
 ## Changelog
 
+- **v1.1 (2026-07-16):** Phase 2 store management. Includes `/stores` CRUD, store agent assignment, and store verification endpoints.
 - **v1.0 (2026-07-14):** Initial backend endpoints delivered. Includes authentication module with `/auth/register`, `/auth/login`, `/auth/profile`, JWT setup, and Swagger documentation.
 
 ## Frontend Integration Checklist

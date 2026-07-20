@@ -7,6 +7,20 @@ Check Price is a location-based price comparison platform. It allows users to se
 - `POST /auth/register`
 - `POST /auth/login`
 - `GET /auth/profile` (Bearer token required)
+
+## Phase 2 API — Store Management
+
+- `GET /stores` — list verified stores (public)
+- `GET /stores/:id` — get store details
+- `POST /stores` — create store (`ADMIN`)
+- `PUT /stores/:id` — update store (`ADMIN` or assigned `STORE_AGENT`)
+- `DELETE /stores/:id` — delete store (`ADMIN`)
+- `PATCH /stores/:id/verify` — verify store (`ADMIN`)
+- `PATCH /stores/:id/reject` — reject store (`ADMIN`)
+- `GET /stores/:id/agents` — list store agents
+- `POST /stores/:id/agents` — assign store agent (`ADMIN`)
+- `DELETE /stores/:id/agents/:userId` — remove store agent (`ADMIN`)
+
 - Swagger UI: `/api-docs`
 
 ## Local development
