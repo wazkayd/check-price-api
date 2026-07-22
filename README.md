@@ -21,6 +21,24 @@ Check Price is a location-based price comparison platform. It allows users to se
 - `POST /stores/:id/agents` — assign store agent (`ADMIN`)
 - `DELETE /stores/:id/agents/:userId` — remove store agent (`ADMIN`)
 
+## Phase 3 API — Product Management
+
+- `GET /categories` — list categories (public)
+- `GET /categories/:id` — get category
+- `POST /categories` — create category (`ADMIN`)
+- `PUT /categories/:id` — update category (`ADMIN`)
+- `DELETE /categories/:id` — delete category (`ADMIN`)
+- `GET /products` — list products (public, available only)
+- `GET /products/:id` — get product with images
+- `POST /products` — create product (`ADMIN`, `STORE_AGENT`)
+- `PUT /products/:id` — update product (`ADMIN`, `STORE_AGENT`)
+- `DELETE /products/:id` — delete product (`ADMIN`)
+- `PATCH /products/:id/availability` — toggle availability
+- `GET /products/:id/images` — list images
+- `POST /products/:id/images` — add image URL
+- `PATCH /products/:id/images/:imageId` — update image
+- `DELETE /products/:id/images/:imageId` — delete image
+
 - Swagger UI: `/api-docs`
 
 ## Local development

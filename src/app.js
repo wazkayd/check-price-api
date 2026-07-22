@@ -7,6 +7,8 @@ const passport = require('passport');
 const swaggerUi = require('swagger-ui-express');
 const authRoutes = require('./routes/authRoutes');
 const storeRoutes = require('./routes/storeRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const productRoutes = require('./routes/productRoutes');
 const swaggerSpec = require('./config/swagger');
 const { configurePassport } = require('./middleware/auth');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
@@ -29,6 +31,8 @@ function createApp() {
 
   app.use('/auth', authRoutes);
   app.use('/stores', storeRoutes);
+  app.use('/categories', categoryRoutes);
+  app.use('/products', productRoutes);
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.get('/api-docs.json', (_req, res) => {

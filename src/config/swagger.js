@@ -10,7 +10,7 @@ const swaggerDefinition = {
   info: {
     title: 'Check Price Platform API',
     version: '1.0.0',
-    description: 'REST API for the Check Price Platform — Phase 1: Auth, Phase 2: Store Management',
+    description: 'REST API for the Check Price Platform — Phase 1: Auth, Phase 2: Stores, Phase 3: Products',
   },
   servers: [
     {

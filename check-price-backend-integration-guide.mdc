@@ -170,7 +170,102 @@ Each phase will be delivered with complete API documentation and is ready for fr
   }
   ```
 
-_Currently, Phase 1 (auth) and Phase 2 (stores) endpoints are available. Future phases will introduce `/products`, `/prices`, etc., following the same request/response patterns._
+_Currently, Phase 1 (auth), Phase 2 (stores), and Phase 3 (products) endpoints are available. Future phases will introduce `/prices`, search, etc., following the same request/response patterns._
+
+### Product Endpoints (Phase 3)
+
+#### Categories
+
+| Method | Endpoint | Auth | Role | Description |
+|--------|----------|------|------|-------------|
+| `GET` | `/categories` | Optional | Public / Admin | List active categories |
+| `GET` | `/categories/:id` | Optional | Public / Admin | Get category details |
+| `POST` | `/categories` | Required | `ADMIN` | Create category |
+| `PUT` | `/categories/:id` | Required | `ADMIN` | Update category |
+| `DELETE` | `/categories/:id` | Required | `ADMIN` | Delete category (must be empty) |
+
+#### Products, Images & Availability
+
+| Method | Endpoint | Auth | Role | Description |
+|--------|----------|------|------|-------------|
+| `GET` | `/products` | Optional | Public / Catalog managers | List products (`?categoryId=`, `?q=`, `?available=`) |
+| `GET` | `/products/:id` | Optional | Public / Catalog managers | Get product with images |
+| `POST` | `/products` | Required | `ADMIN`, `STORE_AGENT` | Create product |
+| `PUT` | `/products/:id` | Required | `ADMIN`, `STORE_AGENT` | Update product |
+| `DELETE` | `/products/:id` | Required | `ADMIN` | Delete product |
+| `PATCH` | `/products/:id/availability` | Required | `ADMIN`, `STORE_AGENT` | Set `isAvailable` |
+| `GET` | `/products/:id/images` | Optional | Public | List product images |
+| `POST` | `/products/:id/images` | Required | `ADMIN`, `STORE_AGENT` | Add image URL |
+| `PATCH` | `/products/:id/images/:imageId` | Required | `ADMIN`, `STORE_AGENT` | Update image metadata |
+| `DELETE` | `/products/:id/images/:imageId` | Required | `ADMIN`, `STORE_AGENT` | Remove image |
+
+#### `POST /categories` – Create Category (ADMIN)
+
+```bash
+curl -X POST <API_BASE>/categories \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <ADMIN_TOKEN>" \
+     -d '{"name": "Groceries", "description": "Food and household items"}'
+```
+
+#### `POST /products` – Create Product
+
+```bash
+curl -X POST <API_BASE>/products \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <TOKEN>" \
+     -d '{
+       "name": "Organic Milk 1L",
+       "categoryId": "uuid-category",
+       "brand": "Fresh Farm",
+       "sku": "MILK-1L-ORG"
+     }'
+```
+
+#### `PATCH /products/:id/availability` – Update Availability
+
+```bash
+curl -X PATCH <API_BASE>/products/uuid-product/availability \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <TOKEN>" \
+     -d '{"isAvailable": false}'
+```
+
+#### `POST /products/:id/images` – Add Product Image
+
+```bash
+curl -X POST <API_BASE>/products/uuid-product/images \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <TOKEN>" \
+     -d '{
+       "url": "https://cdn.example.com/milk.jpg",
+       "altText": "Organic milk carton",
+       "isPrimary": true
+     }'
+```
+
+## Validation Rules (Product Endpoints)
+
+- **Category create/update:**
+  - `name`: required on create.
+  - `slug`: optional, URL-friendly; auto-generated from name if omitted.
+- **Product create/update:**
+  - `name`: required on create.
+  - `categoryId`: required on create, must reference an active category.
+  - `sku`: optional, unique when provided.
+- **Availability:**
+  - `isAvailable`: required boolean.
+- **Images:**
+  - `url`: required valid URL.
+  - `isPrimary`: optional boolean; only one primary image per product.
+
+## Role Access Summary (Phase 3)
+
+| Role | Permissions |
+|------|-------------|
+| `USER` | Browse active categories and available products |
+| `STORE_AGENT` | Manage products, images, and availability |
+| `ADMIN` | Full category CRUD and product deletion |
 
 ### Store Endpoints (Phase 2)
 
@@ -399,6 +494,7 @@ The Swagger UI allows exploring endpoints, viewing request/response schemas, and
 
 ## Changelog
 
+- **v1.2 (2026-07-20):** Phase 3 product management. Includes categories, product CRUD, product images, and availability endpoints.
 - **v1.1 (2026-07-16):** Phase 2 store management. Includes `/stores` CRUD, store agent assignment, and store verification endpoints.
 - **v1.0 (2026-07-14):** Initial backend endpoints delivered. Includes authentication module with `/auth/register`, `/auth/login`, `/auth/profile`, JWT setup, and Swagger documentation.
 

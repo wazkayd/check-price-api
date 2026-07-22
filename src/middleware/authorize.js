@@ -50,8 +50,13 @@ async function requireStoreManagementAccess(req, res, next) {
   return requireStoreAgentAccess(req, res, next);
 }
 
+function authorizeCatalogManager(req, res, next) {
+  return authorize('ADMIN', 'STORE_AGENT')(req, res, next);
+}
+
 module.exports = {
   authorize,
+  authorizeCatalogManager,
   requireStoreAgentAccess,
   requireStoreManagementAccess,
 };
