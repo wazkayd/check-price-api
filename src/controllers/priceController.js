@@ -2,6 +2,7 @@ const { Product, Store, ProductPrice, PriceHistory } = require('../models');
 const AppError = require('../utils/AppError');
 const { sendSuccess } = require('../utils/apiResponse');
 const { userCanManageStore } = require('../middleware/authorize');
+const { isPublicPriceVisible } = require('../utils/publicVisibility');
 
 const priceInclude = [
   {
@@ -62,14 +63,6 @@ async function recordPriceHistory(productPrice, changeType, userId, transaction)
       changeType,
     },
     { transaction }
-  );
-}
-
-function isPublicPriceVisible(productPrice) {
-  return (
-    productPrice.product?.isAvailable &&
-    productPrice.store?.isVerified &&
-    productPrice.store?.status === 'VERIFIED'
   );
 }
 

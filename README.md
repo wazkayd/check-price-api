@@ -47,6 +47,13 @@ Check Price is a location-based price comparison platform. It allows users to se
 - `PUT /prices/:id` — update price (tracks history)
 - `GET /prices/:id/history` — price change history
 
+## Phase 5 API — Search & Comparison
+
+- `GET /search/products` — search products with prices (`?q=`, `?city=`, `?sort=price_asc`)
+- `GET /search/stores` — search verified stores (optional geo radius)
+- `GET /search/compare/:productId` — compare prices across stores
+- `GET /search/products/:productId/lowest-price` — lowest listed price
+
 - Swagger UI: `/api-docs`
 
 ## Local development

@@ -10,6 +10,7 @@ const storeRoutes = require('./routes/storeRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const productRoutes = require('./routes/productRoutes');
 const priceRoutes = require('./routes/priceRoutes');
+const searchRoutes = require('./routes/searchRoutes');
 const swaggerSpec = require('./config/swagger');
 const { configurePassport } = require('./middleware/auth');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
@@ -35,6 +36,7 @@ function createApp() {
   app.use('/categories', categoryRoutes);
   app.use('/products', productRoutes);
   app.use('/prices', priceRoutes);
+  app.use('/search', searchRoutes);
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.get('/api-docs.json', (_req, res) => {

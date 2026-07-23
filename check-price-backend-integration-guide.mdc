@@ -170,7 +170,7 @@ Each phase will be delivered with complete API documentation and is ready for fr
   }
   ```
 
-_Currently, Phase 1 (auth) through Phase 4 (prices) endpoints are available. Phase 5 will add search and comparison._
+_Currently, Phase 1 (auth) through Phase 5 (search & comparison) endpoints are available. Phase 6 will add administration and reporting._
 
 ### Price Endpoints (Phase 4)
 
@@ -251,6 +251,74 @@ curl -X GET <API_BASE>/prices/uuid-price/history \
 | `USER` | View prices for verified stores and available products |
 | `STORE_AGENT` | Submit/update prices and view history for assigned stores |
 | `ADMIN` | Full price management across all stores |
+
+### Search & Comparison Endpoints (Phase 5)
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/search/products` | Public | Search products with lowest price and store listings |
+| `GET` | `/search/stores` | Public | Search verified stores (optional geo radius filter) |
+| `GET` | `/search/compare/:productId` | Public | Compare prices for a product across stores |
+| `GET` | `/search/products/:productId/lowest-price` | Public | Get the lowest listed price for a product |
+
+#### `GET /search/products` – Search Products
+
+```bash
+curl -X GET "<API_BASE>/search/products?q=milk&city=Lagos&sort=price_asc"
+```
+
+Returns matching available products with `lowestPrice`, `priceCount`, and all visible store prices.
+
+#### `GET /search/stores` – Search Stores
+
+```bash
+curl -X GET "<API_BASE>/search/stores?q=mart&city=Lagos"
+```
+
+Optional location filter:
+
+```bash
+curl -X GET "<API_BASE>/search/stores?latitude=6.5244&longitude=3.3792&radiusKm=10"
+```
+
+#### `GET /search/compare/:productId` – Compare Prices
+
+```bash
+curl -X GET "<API_BASE>/search/compare/uuid-product?city=Lagos"
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "message": "Price comparison retrieved successfully",
+  "data": {
+    "product": { "id": "uuid-product", "name": "Organic Milk 1L" },
+    "priceCount": 3,
+    "lowestPrice": { "price": 1450, "store": { "name": "Fresh Mart" } },
+    "prices": []
+  }
+}
+```
+
+#### `GET /search/products/:productId/lowest-price` – Lowest Price
+
+```bash
+curl -X GET "<API_BASE>/search/products/uuid-product/lowest-price"
+```
+
+## Validation Rules (Search Endpoints)
+
+- **Product search:** optional `q`, `categoryId`, `brand`, `city`, `sort` (`price_asc`, `price_desc`, `name`).
+- **Store search:** optional `q`, `city`, `state`; geo filter requires all of `latitude`, `longitude`, `radiusKm`.
+- **Comparison / lowest price:** optional `city` to limit results to stores in a city.
+
+## Role Access Summary (Phase 5)
+
+| Role | Permissions |
+|------|-------------|
+| All users | Public search and price comparison across verified stores |
 
 ### Product Endpoints (Phase 3)
 
@@ -574,6 +642,7 @@ The Swagger UI allows exploring endpoints, viewing request/response schemas, and
 
 ## Changelog
 
+- **v1.4 (2026-07-23):** Phase 5 search and comparison. Includes product/store search, price comparison, and lowest price lookup.
 - **v1.3 (2026-07-23):** Phase 4 price management. Includes submit/update prices and price history tracking.
 - **v1.2 (2026-07-20):** Phase 3 product management. Includes categories, product CRUD, product images, and availability endpoints.
 - **v1.1 (2026-07-16):** Phase 2 store management. Includes `/stores` CRUD, store agent assignment, and store verification endpoints.
