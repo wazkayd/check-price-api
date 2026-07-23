@@ -4,6 +4,8 @@ const StoreAgent = require('./StoreAgent');
 const ProductCategory = require('./ProductCategory');
 const Product = require('./Product');
 const ProductImage = require('./ProductImage');
+const ProductPrice = require('./ProductPrice');
+const PriceHistory = require('./PriceHistory');
 
 Store.hasMany(StoreAgent, { foreignKey: 'storeId', as: 'agents' });
 StoreAgent.belongsTo(Store, { foreignKey: 'storeId', as: 'store' });
@@ -31,6 +33,17 @@ Product.belongsTo(ProductCategory, { foreignKey: 'categoryId', as: 'category' })
 Product.hasMany(ProductImage, { foreignKey: 'productId', as: 'images' });
 ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
+Product.hasMany(ProductPrice, { foreignKey: 'productId', as: 'prices' });
+Store.hasMany(ProductPrice, { foreignKey: 'storeId', as: 'prices' });
+
+ProductPrice.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+ProductPrice.belongsTo(Store, { foreignKey: 'storeId', as: 'store' });
+ProductPrice.belongsTo(User, { foreignKey: 'submittedById', as: 'submittedBy' });
+
+ProductPrice.hasMany(PriceHistory, { foreignKey: 'productPriceId', as: 'history' });
+PriceHistory.belongsTo(ProductPrice, { foreignKey: 'productPriceId', as: 'productPrice' });
+PriceHistory.belongsTo(User, { foreignKey: 'changedById', as: 'changedBy' });
+
 module.exports = {
   User,
   Store,
@@ -38,4 +51,6 @@ module.exports = {
   ProductCategory,
   Product,
   ProductImage,
+  ProductPrice,
+  PriceHistory,
 };

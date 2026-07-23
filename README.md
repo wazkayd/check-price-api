@@ -39,6 +39,14 @@ Check Price is a location-based price comparison platform. It allows users to se
 - `PATCH /products/:id/images/:imageId` — update image
 - `DELETE /products/:id/images/:imageId` — delete image
 
+## Phase 4 API — Price Management
+
+- `GET /prices` — list prices (public, verified stores only)
+- `GET /prices/:id` — get price details
+- `POST /prices` — submit price (`ADMIN`, assigned `STORE_AGENT`)
+- `PUT /prices/:id` — update price (tracks history)
+- `GET /prices/:id/history` — price change history
+
 - Swagger UI: `/api-docs`
 
 ## Local development

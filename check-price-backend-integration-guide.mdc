@@ -170,7 +170,87 @@ Each phase will be delivered with complete API documentation and is ready for fr
   }
   ```
 
-_Currently, Phase 1 (auth), Phase 2 (stores), and Phase 3 (products) endpoints are available. Future phases will introduce `/prices`, search, etc., following the same request/response patterns._
+_Currently, Phase 1 (auth) through Phase 4 (prices) endpoints are available. Phase 5 will add search and comparison._
+
+### Price Endpoints (Phase 4)
+
+| Method | Endpoint | Auth | Role | Description |
+|--------|----------|------|------|-------------|
+| `GET` | `/prices` | Optional | Public / Managers | List prices (`?productId=`, `?storeId=`) |
+| `GET` | `/prices/:id` | Optional | Public / Managers | Get a price record |
+| `POST` | `/prices` | Required | `ADMIN`, assigned `STORE_AGENT` | Submit price for product at store |
+| `PUT` | `/prices/:id` | Required | `ADMIN`, assigned `STORE_AGENT` | Update price (records history) |
+| `GET` | `/prices/:id/history` | Required | `ADMIN`, assigned `STORE_AGENT` | View price change history |
+
+#### `POST /prices` – Submit Price
+
+```bash
+curl -X POST <API_BASE>/prices \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <TOKEN>" \
+     -d '{
+       "productId": "uuid-product",
+       "storeId": "uuid-store",
+       "price": 1500.00,
+       "currency": "NGN"
+     }'
+```
+
+**Response (201 Created):**
+
+```json
+{
+  "success": true,
+  "message": "Price submitted successfully",
+  "data": {
+    "id": "uuid-price",
+    "productId": "uuid-product",
+    "storeId": "uuid-store",
+    "price": 1500,
+    "currency": "NGN",
+    "submittedById": "uuid-user",
+    "createdAt": "2026-07-23T12:00:00.000Z",
+    "updatedAt": "2026-07-23T12:00:00.000Z"
+  }
+}
+```
+
+#### `PUT /prices/:id` – Update Price
+
+```bash
+curl -X PUT <API_BASE>/prices/uuid-price \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <TOKEN>" \
+     -d '{"price": 1450.00}'
+```
+
+Each update appends a `UPDATED` entry to price history.
+
+#### `GET /prices/:id/history` – Price History
+
+```bash
+curl -X GET <API_BASE>/prices/uuid-price/history \
+     -H "Authorization: Bearer <TOKEN>"
+```
+
+## Validation Rules (Price Endpoints)
+
+- **Submit:**
+  - `productId`: required UUID.
+  - `storeId`: required UUID (store must be verified).
+  - `price`: required, greater than 0.
+  - `currency`: optional 3-letter code (default `NGN`).
+- **Update:**
+  - `price`: required, greater than 0.
+- Only one active price per product/store pair. Use `PUT` to change an existing price.
+
+## Role Access Summary (Phase 4)
+
+| Role | Permissions |
+|------|-------------|
+| `USER` | View prices for verified stores and available products |
+| `STORE_AGENT` | Submit/update prices and view history for assigned stores |
+| `ADMIN` | Full price management across all stores |
 
 ### Product Endpoints (Phase 3)
 
@@ -494,6 +574,7 @@ The Swagger UI allows exploring endpoints, viewing request/response schemas, and
 
 ## Changelog
 
+- **v1.3 (2026-07-23):** Phase 4 price management. Includes submit/update prices and price history tracking.
 - **v1.2 (2026-07-20):** Phase 3 product management. Includes categories, product CRUD, product images, and availability endpoints.
 - **v1.1 (2026-07-16):** Phase 2 store management. Includes `/stores` CRUD, store agent assignment, and store verification endpoints.
 - **v1.0 (2026-07-14):** Initial backend endpoints delivered. Includes authentication module with `/auth/register`, `/auth/login`, `/auth/profile`, JWT setup, and Swagger documentation.

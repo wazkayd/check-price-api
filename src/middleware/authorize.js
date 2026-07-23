@@ -54,9 +54,62 @@ function authorizeCatalogManager(req, res, next) {
   return authorize('ADMIN', 'STORE_AGENT')(req, res, next);
 }
 
+async function userCanManageStore(user, storeId) {
+  if (user.role === 'ADMIN') {
+    return true;
+  }
+
+  if (user.role !== 'STORE_AGENT') {
+    return false;
+  }
+
+  const assignment = await StoreAgent.findOne({
+    where: {
+      storeId,
+      userId: user.id,
+    },
+  });
+
+  return Boolean(assignment);
+}
+
+async function requirePriceManagementAccess(req, _res, next) {
+  try {
+    let storeId = req.body.storeId;
+
+    if (!storeId && req.params.id) {
+      const { ProductPrice } = require('../models');
+      const productPrice = await ProductPrice.findByPk(req.params.id);
+
+      if (!productPrice) {
+        return next(new AppError('Price not found', 404));
+      }
+
+      storeId = productPrice.storeId;
+      req.productPrice = productPrice;
+    }
+
+    if (!storeId) {
+      return next(new AppError('storeId is required', 400));
+    }
+
+    const allowed = await userCanManageStore(req.user, storeId);
+
+    if (!allowed) {
+      return next(new AppError('You do not have permission to manage prices for this store', 403));
+    }
+
+    return next();
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   authorize,
   authorizeCatalogManager,
   requireStoreAgentAccess,
   requireStoreManagementAccess,
+  userCanManageStore,
+  requirePriceManagementAccess,
 };
